@@ -1,0 +1,61 @@
+def main():
+    print "\n\n>>>>> now entering in a subprocess and execute some additional and custom commands <<<<<<<<<\n\n"
+
+def add_cmd(p,prompt):
+    import re
+    #run some command
+    p.expect(prompt)
+    p.sendline('admin display-config')
+    p.expect(prompt)
+    p.sendline('show card')
+    p.expect(prompt)
+    p.sendline('show card detail')
+    p.expect(prompt)
+    p.sendline('show port')
+    p.expect(prompt)
+    p.sendline('show lag description')
+    p.expect(prompt)
+    p.sendline('show lag detail')
+    p.expect(prompt)
+    p.sendline('show lag statistics')
+    p.expect(prompt)
+    p.sendline('show service service-using')
+    p.expect(prompt)
+    expreg = re.compile('(\d+)\s+VPRN')
+    list_ID = expreg.findall(p.before)
+    print ('Voici la liste de tous les vprn sur cet equipement :')
+    print (list_ID)
+    for ID in list_ID:
+     p.sendline('show router '+ID+' interface')
+     p.expect(prompt)
+     p.sendline('show router '+ID+' route-table summary')
+     p.expect(prompt)
+     p.sendline('show router '+ID+' route-table')
+     p.expect(prompt)
+     p.sendline('show router '+ID+' route-table | match "No. of Routes"')
+     p.expect(prompt)
+     print ('##################################################')
+     print ('Voici les informations pour le VPRN '+ID+' :\n')
+     print ('Nombre de routes dans la table de routage : '),
+     print (re.findall("No. of Routes:\s\d+", p.before))
+     p.sendline('show router '+ID+' bgp summary')
+     p.expect(prompt)
+     expreg = re.compile('(\d+\.\d+\.\d+\.\d+)\s\s\s\s\s')
+     list_neighbor_bgp = expreg.findall(p.before)
+     print ('Voici la liste des neighbor BGP pour le VPRN '+ID+' :')
+     print (list_neighbor_bgp)
+     for NEIGHBOR_BGP in list_neighbor_bgp:
+      print ('Neighbor BGP '+NEIGHBOR_BGP+' :\n')
+      p.sendline('show router '+ID+' bgp summary neighbor '+NEIGHBOR_BGP)
+      p.expect(prompt)
+      p.sendline('show router '+ID+' bgp neighbor '+NEIGHBOR_BGP+' advertised-routes')
+      p.expect(prompt)
+      print ('Advertised-routes :'),
+      print (re.findall("Routes\s:\s\d+", p.before))
+      p.sendline('show router '+ID+' bgp neighbor '+NEIGHBOR_BGP+' received-routes')
+      p.expect(prompt)
+      print ('Received-routes :'),
+      print (re.findall("Routes\s:\s\d+", p.before))
+      p.sendline('show router '+ID+' bgp neighbor '+NEIGHBOR_BGP+' detail')
+      p.expect(prompt)
+      print('\n')
